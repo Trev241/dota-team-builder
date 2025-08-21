@@ -64,10 +64,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, hydrateOnIdle } from 'vue'
+import { ref, computed, onMounted, onUnmounted, hydrateOnIdle } from "vue"
 
-const searchQuery = ref('')
-const typedText = ref('')
+const searchQuery = ref("")
+const typedText = ref("")
 const debounceTimeout = ref(null)
 const isSmallScreen = ref(window.innerWidth < 768)
 const team = ref([])
@@ -76,7 +76,7 @@ const heroes = ref([]) // initially empty, to be fetched
 function resetTypedTextDebounced() {
   if (debounceTimeout.value) clearTimeout(debounceTimeout.value)
   debounceTimeout.value = setTimeout(() => {
-    typedText.value = ''
+    typedText.value = ""
     searchQuery.value = typedText.value
   }, 3500)
 }
@@ -85,33 +85,38 @@ function onGlobalKeyDown(event) {
   // Ignore on smaller devices
   if (isSmallScreen.value) return
 
+  console.log(event.key)
+
   if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
     typedText.value += event.key
     searchQuery.value = typedText.value
-    resetTypedTextDebounced()
-  } else if (event.key === 'Backspace') {
+  } else if (event.key === "Backspace") {
     typedText.value = typedText.value.slice(0, -1)
     searchQuery.value = typedText.value
-    resetTypedTextDebounced()
+  } else if (event.key === "Enter") {
+    addHero(filteredAndSortedHeroes[0])
+    searchQuery.value = typedText.value = ""
   }
+
+  resetTypedTextDebounced()
 }
 
 function onResize() {
   isSmallScreen.value = window.innerWidth < 768
-  if (isSmallScreen.value) typedText.value = ''
+  if (isSmallScreen.value) typedText.value = ""
 }
 
 onMounted(async () => {
-  window.addEventListener('keydown', onGlobalKeyDown)
-  window.addEventListener('resize', onResize)
+  window.addEventListener("keydown", onGlobalKeyDown)
+  window.addEventListener("resize", onResize)
 
-  const response = await fetch('/heroes.json')
+  const response = await fetch("/heroes.json")
   heroes.value = await response.json()
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', onGlobalKeyDown)
-  window.removeEventListener('resize', onResize)
+  window.removeEventListener("keydown", onGlobalKeyDown)
+  window.removeEventListener("resize", onResize)
   if (debounceTimeout.value) clearTimeout(debounceTimeout.value)
 })
 
@@ -120,11 +125,6 @@ const availableHeroes = computed(() =>
 )
 
 const filteredAndSortedHeroes = computed(() => {
-  // const filtered = availableHeroes.value.filter(
-  //   (hero) =>
-  //     hero.localized_name.toLowerCase().includes(searchQuery.value.toLowerCase()) || !isSmallScreen,
-  // )
-
   const filtered = []
   for (const hero of availableHeroes.value) {
     const isQueryMatched = hero.localized_name
@@ -133,7 +133,6 @@ const filteredAndSortedHeroes = computed(() => {
     if (isQueryMatched || !isSmallScreen.value) {
       const heroData = { ...hero }
       if (isQueryMatched && !isSmallScreen.value) heroData.filtered = true
-      console.log(heroData)
       filtered.push(heroData)
     }
   }
