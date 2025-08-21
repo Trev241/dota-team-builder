@@ -162,7 +162,7 @@ const filterHeroIcons = () => {
 
     if (isQueryMatched || !isSmallScreen.value) {
       const heroData = { ...hero }
-      if (isQueryMatched && !isSmallScreen.value) heroData.filtered = true
+      if ((isQueryMatched && !isSmallScreen.value) || isSmallScreen.value) heroData.filtered = true
       filtered.push(heroData)
     }
   }
