@@ -11,9 +11,33 @@
     <h1 class="text-4xl font-bold mb-2">Dota 2 Team Builder</h1>
     <p class="text-xl mb-6">Select heroes to create your new team.</p>
 
-    <h2 class="text-xl font-semibold mb-4">Your Team</h2>
-    <div class="flex flex-wrap mb-8">
+    <h2 class="text-xl text-center font-semibold mb-4">Your Team</h2>
+    <div class="flex flex-wrap max-w-6xl mx-auto mb-8">
       <div
+        v-for="index in maxTeamSize"
+        :key="index"
+        @click="removeHero(team[index - 1])"
+        class="w-1/2 md:w-1/5 rounded-lg flex flex-col items-center justify-center text-gray-400"
+      >
+        <template v-if="team[index - 1]">
+          <div class="hover:bg-red-100 p-2 rounded-lg">
+            <img
+              :src="team[index - 1].icon_url"
+              :alt="team[index - 1].localized_name"
+              class="object-contain rounded-md"
+            />
+            <div class="mt-1 font-semibold text-gray-900 text-center">
+              {{ team[index - 1].localized_name }}
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div class="h-40">
+            <p class="text-lg italic">Empty Slot</p>
+          </div>
+        </template>
+      </div>
+      <!-- <div
         v-for="hero in team"
         @click="removeHero(hero)"
         :key="hero.id"
@@ -25,7 +49,7 @@
           class="w-full rounded-md object-contain"
         />
         <div class="text-center font-semibold mt-2">{{ hero.localized_name }}</div>
-      </div>
+      </div> -->
     </div>
 
     <h2 class="text-xl font-semibold mb-4">Available Heroes</h2>
@@ -41,7 +65,7 @@
         v-for="hero in filteredAndSortedHeroes"
         :key="hero.id"
         :class="[
-          'w-1/3 md:w-30 rounded-lg p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+          'w-1/3 md:w-30 rounded-lg hover:p-0 p-2 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
           team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
           !hero.filtered && 'opacity-10',
         ]"
@@ -66,6 +90,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, hydrateOnIdle } from "vue"
 
+const maxTeamSize = 5
+
 const searchQuery = ref("")
 const typedText = ref("")
 const debounceTimeout = ref(null)
@@ -85,8 +111,6 @@ function onGlobalKeyDown(event) {
   // Ignore on smaller devices
   if (isSmallScreen.value) return
 
-  console.log(event.key)
-
   if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
     typedText.value += event.key
     searchQuery.value = typedText.value
@@ -94,7 +118,11 @@ function onGlobalKeyDown(event) {
     typedText.value = typedText.value.slice(0, -1)
     searchQuery.value = typedText.value
   } else if (event.key === "Enter") {
-    addHero(filteredAndSortedHeroes[0])
+    const filteredHeroes = availableHeroes.value.filter((hero) =>
+      hero.localized_name.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    )
+    console.log(filteredHeroes)
+    addHero(filteredHeroes[0])
     searchQuery.value = typedText.value = ""
   }
 
@@ -124,12 +152,14 @@ const availableHeroes = computed(() =>
   heroes.value.filter((h) => !team.value.some((th) => th.id === h.id)),
 )
 
-const filteredAndSortedHeroes = computed(() => {
+const filterHeroIcons = () => {
   const filtered = []
+
   for (const hero of availableHeroes.value) {
     const isQueryMatched = hero.localized_name
       .toLowerCase()
       .includes(searchQuery.value.toLowerCase())
+
     if (isQueryMatched || !isSmallScreen.value) {
       const heroData = { ...hero }
       if (isQueryMatched && !isSmallScreen.value) heroData.filtered = true
@@ -138,7 +168,9 @@ const filteredAndSortedHeroes = computed(() => {
   }
 
   return filtered.sort((a, b) => computeSynergy(b) - computeSynergy(a)) // descending
-})
+}
+
+const filteredAndSortedHeroes = computed(() => filterHeroIcons())
 
 function computeSynergy(candidate) {
   let score = 0
