@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
+from roles import role_map
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import json
 
 app = FastAPI()
@@ -26,6 +28,7 @@ heroes = []
 for h in json.load(open("assets/heroes.json"))["heroes"]:
     h["icon_url"] = ICON_URL + h["name"] + ".png"
     heroes.append(h)
+heroes_lookup = {h["id"]: h for h in heroes}
 
 
 class SelfAttention(nn.Module):
@@ -123,28 +126,94 @@ class HeroInput(BaseModel):
     heroes: List[int]  # List of 4 hero IDs as input
 
 
-# API endpoint to predict next hero
-@app.post("/predict")
-def predict(input: HeroInput):
-    if len(input.heroes) != 4:
-        return {"error": "Exactly 4 hero IDs are required as input."}
+def fill_heroes_with_similar(heroes_list, embedding_layer, num_total=4):
+    n = len(heroes_list)
+    if n == 0:
+        raise ValueError("At least one hero ID required")
 
-    # Convert input to tensor
-    hero_tensor = torch.tensor([input.heroes], dtype=torch.long)  # Batch size 1
+    if n >= num_total:
+        return heroes_list[:num_total]
+
+    heroes_tensor = torch.tensor(heroes_list, dtype=torch.long)
+    chosen_embeds = embedding_layer(heroes_tensor)
+    avg_embed = chosen_embeds.mean(dim=0, keepdim=True)
+    all_embeds = embedding_layer.weight
+
+    avg_embed_norm = F.normalize(avg_embed, p=2, dim=1)
+    all_embeds_norm = F.normalize(all_embeds, p=2, dim=1)
+    similarities = torch.matmul(all_embeds_norm, avg_embed_norm.t()).squeeze(1)
+
+    mask = torch.ones_like(similarities, dtype=torch.bool)
+    mask[heroes_tensor] = False
+    similarities = similarities.masked_fill(~mask, float("-inf"))
+
+    num_to_pick = num_total - n
+    _, top_indices = torch.topk(similarities, num_to_pick)
+
+    filled_heroes = heroes_list + top_indices.tolist()
+    return filled_heroes
+
+
+@app.post("/predict")
+def predict_next_hero_order(input: HeroInput):
+    heroes_list = input.heroes
+    n = len(heroes_list)
+
+    if n < 1 or n > 4:
+        return {"error": "Provide between 1 and 4 hero IDs."}
+
+    heroes_list = [h - 1 for h in heroes_list]  # to 0-based
+
+    # Compute cosine similarity scores of all heroes vs avg embedding of chosen heroes
+    def cosine_similarity_scores(chosen_heroes):
+        chosen_tensor = torch.tensor(chosen_heroes, dtype=torch.long)
+        chosen_embeds = model.embedding(chosen_tensor)  # [n, embed_dim]
+        avg_embed = chosen_embeds.mean(dim=0, keepdim=True)  # [1, embed_dim]
+
+        all_embeds = model.embedding.weight  # [num_heroes, embed_dim]
+
+        avg_embed_norm = F.normalize(avg_embed, p=2, dim=1)  # [1, embed_dim]
+        all_embeds_norm = F.normalize(all_embeds, p=2, dim=1)  # [num_heroes, embed_dim]
+
+        sims = torch.matmul(all_embeds_norm, avg_embed_norm.t()).squeeze(
+            1
+        )  # [num_heroes]
+
+        return sims
+
+    # Predict next hero using cosine similarity for slots 2-4
+    if n < 4:
+        sims = cosine_similarity_scores(heroes_list)
+        chosen_set = set(heroes_list)
+        # Sort heroes by similarity desc, exclude already chosen
+        filtered = [
+            (i, sim.item()) for i, sim in enumerate(sims) if i not in chosen_set
+        ]
+        filtered_sorted = sorted(filtered, key=lambda x: x[1], reverse=True)
+        # Convert to 1-based IDs
+        preds = [
+            {**heroes_lookup[i + 1], "score": score}
+            for i, score in filtered_sorted
+            if i + 1 != 24
+        ]
+
+        return {"next_slot": n + 1, "sorted_candidates": preds}
+
+    # Predict 5th hero using model when n == 4
+    hero_tensor = torch.tensor([heroes_list], dtype=torch.long)
+    role_tensor = torch.tensor([[role_map[h] for h in heroes_list]], dtype=torch.long)
+
     with torch.no_grad():
-        logits = model(hero_tensor)
+        logits, _ = model(hero_tensor, role_tensor)
         probs = torch.softmax(logits, dim=1).squeeze(0)
 
-    # Get top 5 predictions (hero IDs and probabilities)
-    top_probs, top_indices = torch.topk(probs, 5)
-    predictions = [
-        {"hero_id": int(idx), "probability": float(prob)}
+    k = probs.size(0)
+    top_probs, top_indices = torch.topk(probs, k)
+    preds = [
+        # Restore to 1-based indexing
+        {**heroes_lookup[int(idx) + 1], "score": float(prob)}
         for idx, prob in zip(top_indices, top_probs)
+        if idx + 1 != 24
     ]
 
-    return {"predictions": predictions}
-
-
-@app.get("/heroes")
-def get_heroes():
-    return heroes
+    return {"next_slot": 5, "sorted_candidates": preds}

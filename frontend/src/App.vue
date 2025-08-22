@@ -12,7 +12,7 @@
     <p class="text-xl mb-6">Select heroes to create your new team.</p>
 
     <h2 class="text-xl text-center font-semibold mb-4">Your Team</h2>
-    <div class="flex flex-wrap max-w-6xl mx-auto mb-8">
+    <div class="flex flex-wrap max-w-4xl mx-auto mb-8">
       <div
         v-for="index in maxTeamSize"
         :key="index"
@@ -32,7 +32,7 @@
           </div>
         </template>
         <template v-else>
-          <div class="h-40">
+          <div class="flex items-center h-40">
             <p class="text-lg italic">Empty Slot</p>
           </div>
         </template>
@@ -65,7 +65,7 @@
         v-for="hero in filteredAndSortedHeroes"
         :key="hero.id"
         :class="[
-          'w-1/3 md:w-30 rounded-lg hover:p-0 p-2 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+          'w-1/3 md:w-30 rounded-lg hover:bg-green-200 p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
           team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
           !hero.filtered && 'opacity-10',
         ]"
@@ -107,7 +107,7 @@ function resetTypedTextDebounced() {
   }, 3500)
 }
 
-function onGlobalKeyDown(event) {
+async function onGlobalKeyDown(event) {
   // Ignore on smaller devices
   if (isSmallScreen.value) return
 
@@ -121,8 +121,7 @@ function onGlobalKeyDown(event) {
     const filteredHeroes = availableHeroes.value.filter((hero) =>
       hero.localized_name.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
-    console.log(filteredHeroes)
-    addHero(filteredHeroes[0])
+    await addHero(filteredHeroes[0])
     searchQuery.value = typedText.value = ""
   }
 
@@ -156,6 +155,8 @@ const filterHeroIcons = () => {
   const filtered = []
 
   for (const hero of availableHeroes.value) {
+    console.log(hero)
+
     const isQueryMatched = hero.localized_name
       .toLowerCase()
       .includes(searchQuery.value.toLowerCase())
@@ -167,26 +168,33 @@ const filterHeroIcons = () => {
     }
   }
 
-  return filtered.sort((a, b) => computeSynergy(b) - computeSynergy(a)) // descending
+  return filtered.sort((a, b) => {
+    if (a.score && b.score) return b.score - a.score
+    else return a.localized_name.localeCompare(b.localized_name)
+  })
 }
 
 const filteredAndSortedHeroes = computed(() => filterHeroIcons())
 
-function computeSynergy(candidate) {
-  let score = 0
-  for (const hero of team.value) {
-    const setA = new Set(hero.localized_name.toLowerCase())
-    const setB = new Set(candidate.localized_name.toLowerCase())
-    for (const ch of setA) {
-      if (setB.has(ch)) score++
-    }
-  }
-  return score
-}
-
-function addHero(hero) {
-  if (team.value.length >= 5) return
+async function addHero(hero) {
+  if (team.value.length >= 5 || team.value.some((h) => h.id === hero.id)) return
   team.value.push(hero)
+
+  try {
+    const response = await fetch("http://localhost:8000/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ heroes: team.value.map((hero) => hero.id) }),
+    })
+
+    if (!response.ok) throw new Error("Prediction API error")
+
+    const results = await response.json()
+    heroes.value = results.sorted_candidates || []
+  } catch (error) {
+    console.error(error)
+    heroes.value = []
+  }
 }
 
 function removeHero(hero) {
