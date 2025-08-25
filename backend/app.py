@@ -192,7 +192,7 @@ def predict_next_hero_order(input: HeroInput):
         filtered_sorted = sorted(filtered, key=lambda x: x[1], reverse=True)
         # Convert to 1-based IDs
         preds = [
-            {**heroes_lookup[i + 1], "score": score}
+            {**heroes_lookup[i + 1], "score": score if i not in heroes_list else 0}
             for i, score in filtered_sorted
             if i + 1 != 24
         ]
@@ -211,7 +211,10 @@ def predict_next_hero_order(input: HeroInput):
     top_probs, top_indices = torch.topk(probs, k)
     preds = [
         # Restore to 1-based indexing
-        {**heroes_lookup[int(idx) + 1], "score": float(prob)}
+        {
+            **heroes_lookup[int(idx) + 1],
+            "score": float(prob) if idx not in heroes_list else 0,
+        }
         for idx, prob in zip(top_indices, top_probs)
         if idx + 1 != 24
     ]
