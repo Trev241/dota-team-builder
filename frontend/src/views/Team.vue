@@ -37,19 +37,6 @@
           </div>
         </template>
       </div>
-      <!-- <div
-        v-for="hero in team"
-        @click="removeHero(hero)"
-        :key="hero.id"
-        class="w-1/2 md:w-1/5 hover:bg-red-100 rounded-lg p-2 flex flex-col items-center hover:shadow-lg transition-shadow relative"
-      >
-        <img
-          :src="hero.icon_url"
-          :alt="hero.localized_name"
-          class="w-full rounded-md object-contain"
-        />
-        <div class="text-center font-semibold mt-2">{{ hero.localized_name }}</div>
-      </div> -->
     </div>
 
     <h2 class="text-xl font-semibold">Available Heroes</h2>
@@ -69,6 +56,7 @@
           'w-1/3 md:w-30 rounded-lg hover:bg-green-200 p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
           team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
           !hero.filtered && 'opacity-10',
+          hero.selected && 'opacity-10',
         ]"
         @click="addHero(hero)"
         :aria-disabled="team.length >= 5"
@@ -149,7 +137,10 @@ onUnmounted(() => {
 })
 
 const availableHeroes = computed(() =>
-  heroes.value.filter((h) => !team.value.some((th) => th.id === h.id)),
+  heroes.value.map((h) => ({
+    ...h,
+    selected: team.value.some((th) => th.id === h.id),
+  })),
 )
 
 const filterHeroIcons = () => {
@@ -168,8 +159,12 @@ const filterHeroIcons = () => {
   }
 
   return filtered.sort((a, b) => {
-    if (a.score && b.score) return b.score - a.score
-    else return a.localized_name.localeCompare(b.localized_name)
+    if (a.selected && !b.selected) return 1
+    if (!a.selected && b.selected) return -1
+
+    if (a.score !== b.score) return b.score - a.score
+
+    return a.localized_name.localeCompare(b.localized_name)
   })
 }
 
@@ -178,6 +173,9 @@ const filteredAndSortedHeroes = computed(() => filterHeroIcons())
 async function addHero(hero) {
   if (team.value.length >= 5 || team.value.some((h) => h.id === hero.id)) return
   team.value.push(hero)
+
+  // Do not call predict if the team is full
+  if (team.value.length === 5) return
 
   try {
     const response = await fetch("http://localhost:8000/predict", {
@@ -192,7 +190,6 @@ async function addHero(hero) {
     heroes.value = results.sorted_candidates || []
   } catch (error) {
     console.error(error)
-    heroes.value = []
   }
 }
 

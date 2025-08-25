@@ -7,6 +7,7 @@ from roles import role_map
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 import json
 
 app = FastAPI()
@@ -184,15 +185,17 @@ def predict_next_hero_order(input: HeroInput):
     # Predict next hero using cosine similarity for slots 2-4
     if n < 4:
         sims = cosine_similarity_scores(heroes_list)
-        chosen_set = set(heroes_list)
-        # Sort heroes by similarity desc, exclude already chosen
+        scores = sims.detach().numpy()
+
+        percentiles = np.argsort(np.argsort(scores))
+        percentiles = (percentiles / (len(scores) - 1)) * 100  # 0-100 scale
+
         filtered = [
-            (i, sim.item()) for i, sim in enumerate(sims) if i not in chosen_set
+            (i, 0 if i in heroes_list else percentiles[i]) for i in range(len(scores))
         ]
         filtered_sorted = sorted(filtered, key=lambda x: x[1], reverse=True)
-        # Convert to 1-based IDs
         preds = [
-            {**heroes_lookup[i + 1], "score": score if i not in heroes_list else 0}
+            {**heroes_lookup[i + 1], "score": score}
             for i, score in filtered_sorted
             if i + 1 != 24
         ]
@@ -213,10 +216,11 @@ def predict_next_hero_order(input: HeroInput):
         # Restore to 1-based indexing
         {
             **heroes_lookup[int(idx) + 1],
-            "score": float(prob) if idx not in heroes_list else 0,
+            "score": float(prob) * 100 if idx not in heroes_list else 0,
         }
         for idx, prob in zip(top_indices, top_probs)
         if idx + 1 != 24
     ]
+    preds = sorted(preds, key=lambda x: x["score"], reverse=True)
 
     return {"next_slot": 5, "sorted_candidates": preds}
