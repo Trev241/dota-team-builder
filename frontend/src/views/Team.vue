@@ -53,7 +53,7 @@
         v-for="hero in filteredAndSortedHeroes"
         :key="hero.id"
         :class="[
-          'w-1/3 md:w-30 rounded-lg hover:bg-green-200 p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+          'w-1/3 md:w-30 hero-icon rounded-lg hover:bg-green-200 p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
           team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
           !hero.filtered && 'opacity-10',
           hero.selected && 'opacity-10',
@@ -77,7 +77,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, hydrateOnIdle } from "vue"
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue"
+import gsap from "gsap"
 
 const maxTeamSize = 5
 
@@ -128,6 +129,27 @@ onMounted(async () => {
 
   const response = await fetch("/heroes.json")
   heroes.value = await response.json()
+
+  await nextTick()
+
+  const images = document.querySelectorAll(".hero-icon img")
+
+  gsap.set(".hero-icon", { scale: 0 })
+  const imagePromises = Array.from(images).map((img) => {
+    return new Promise((resolve) => {
+      if (img.complete) {
+        resolve()
+      } else {
+        img.addEventListener("load", resolve)
+        img.addEventListener("error", resolve)
+      }
+    })
+  })
+
+  // Wait for all images to load
+  await Promise.all(imagePromises)
+
+  gsap.to(".hero-icon", { scale: 1, stagger: 0.01 })
 })
 
 onUnmounted(() => {
