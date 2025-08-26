@@ -9,7 +9,7 @@
         <router-link to="/about" class="hover:text-blue-300">Learn More</router-link>
       </div>
     </nav>
-    <main class="p-8">
+    <main>
       <router-view />
     </main>
   </div>

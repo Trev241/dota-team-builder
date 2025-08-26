@@ -48,7 +48,7 @@
       type="text"
       class="w-full p-3 mt-2 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
     />
-    <div class="flex flex-wrap">
+    <div ref="listContainer" class="flex flex-wrap">
       <div
         v-for="hero in filteredAndSortedHeroes"
         :key="hero.id"
@@ -79,6 +79,9 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue"
 import gsap from "gsap"
+import Flip from "gsap/Flip"
+
+gsap.registerPlugin(Flip)
 
 const maxTeamSize = 5
 
@@ -88,8 +91,9 @@ const debounceTimeout = ref(null)
 const isSmallScreen = ref(window.innerWidth < 768)
 const team = ref([])
 const heroes = ref([]) // initially empty, to be fetched
+const listContainer = ref(null)
 
-function resetTypedTextDebounced() {
+const resetTypedTextDebounced = () => {
   if (debounceTimeout.value) clearTimeout(debounceTimeout.value)
   debounceTimeout.value = setTimeout(() => {
     typedText.value = ""
@@ -97,7 +101,7 @@ function resetTypedTextDebounced() {
   }, 3500)
 }
 
-async function onGlobalKeyDown(event) {
+const onGlobalKeyDown = async (event) => {
   // Ignore on smaller devices
   if (isSmallScreen.value) return
 
@@ -118,7 +122,7 @@ async function onGlobalKeyDown(event) {
   resetTypedTextDebounced()
 }
 
-function onResize() {
+const onResize = () => {
   isSmallScreen.value = window.innerWidth < 768
   if (isSmallScreen.value) typedText.value = ""
 }
@@ -165,6 +169,20 @@ const availableHeroes = computed(() =>
   })),
 )
 
+async function animateSort(newOrder) {
+  const state = Flip.getState(listContainer.value.querySelectorAll(".hero-icon"))
+
+  // Update with new order
+  heroes.value = newOrder
+
+  await nextTick()
+
+  Flip.from(state, {
+    duration: 0.75,
+    ease: "power1.inOut",
+  })
+}
+
 const filterHeroIcons = () => {
   const filtered = []
 
@@ -192,7 +210,7 @@ const filterHeroIcons = () => {
 
 const filteredAndSortedHeroes = computed(() => filterHeroIcons())
 
-async function addHero(hero) {
+const addHero = async (hero) => {
   if (team.value.length >= 5 || team.value.some((h) => h.id === hero.id)) return
   team.value.push(hero)
 
@@ -209,13 +227,15 @@ async function addHero(hero) {
     if (!response.ok) throw new Error("Prediction API error")
 
     const results = await response.json()
+
     heroes.value = results.sorted_candidates || []
+    if (!isSmallScreen.value) animateSort(results.sorted_candidates)
   } catch (error) {
     console.error(error)
   }
 }
 
-function removeHero(hero) {
+const removeHero = (hero) => {
   team.value = team.value.filter((h) => h.id !== hero.id)
 }
 </script>
