@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-6xl mx-auto">
+  <div class="max-w-6xl mx-auto mt-12">
     <h1 class="text-4xl mb-2 font-bold">Another Dota Synergy Predictor</h1>
     <p class="text-xl mb-6">To be used for fun</p>
 
@@ -55,7 +55,7 @@
         >dataset</a
       >
       used is from 2016. That's the reason why some heroes are missing. This was not created to be
-      taken seriously which is why no effort has been made towards ensuring its modern relevancy.
+      taken seriously which is why no effort has been made towards ensuring its modern relevance.
     </p>
   </div>
 </template>

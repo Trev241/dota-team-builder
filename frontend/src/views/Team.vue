@@ -20,11 +20,11 @@
         class="w-1/2 md:w-1/5 rounded-lg flex flex-col items-center justify-center text-gray-400"
       >
         <template v-if="team[index - 1]">
-          <div class="hover:bg-red-100 p-2 rounded-lg">
+          <div class="w-full hover:bg-red-100 p-2 rounded-lg">
             <img
               :src="team[index - 1].icon_url"
               :alt="team[index - 1].localized_name"
-              class="object-contain rounded-md"
+              class="w-full rounded-md object-contain"
             />
             <div class="mt-1 font-semibold text-gray-900 text-center">
               {{ team[index - 1].localized_name }}
@@ -92,6 +92,7 @@ const isSmallScreen = ref(window.innerWidth < 768)
 const team = ref([])
 const heroes = ref([]) // initially empty, to be fetched
 const listContainer = ref(null)
+const animationDone = ref(false)
 
 const resetTypedTextDebounced = () => {
   if (debounceTimeout.value) clearTimeout(debounceTimeout.value)
@@ -153,7 +154,8 @@ onMounted(async () => {
   // Wait for all images to load
   await Promise.all(imagePromises)
 
-  gsap.to(".hero-icon", { scale: 1, stagger: 0.01 })
+  await gsap.to(".hero-icon", { scale: 1, stagger: 0.01 })
+  animationDone.value = true
 })
 
 onUnmounted(() => {
@@ -178,8 +180,8 @@ async function animateSort(newOrder) {
   await nextTick()
 
   Flip.from(state, {
-    duration: 0.75,
-    ease: "power1.inOut",
+    duration: 1,
+    ease: "power3.out",
   })
 }
 
@@ -211,12 +213,25 @@ const filterHeroIcons = () => {
 const filteredAndSortedHeroes = computed(() => filterHeroIcons())
 
 const addHero = async (hero) => {
-  if (team.value.length >= 5 || team.value.some((h) => h.id === hero.id)) return
+  if (team.value.length >= 5 || team.value.some((h) => h.id === hero.id) || !animationDone.value)
+    return
   team.value.push(hero)
 
   // Do not call predict if the team is full
-  if (team.value.length === 5) return
+  if (team.value.length === 5) {
+    animateSort(heroes.value)
+    return
+  }
 
+  await predictHero()
+}
+
+const removeHero = async (hero) => {
+  team.value = team.value.filter((h) => h.id !== hero.id)
+  await predictHero()
+}
+
+const predictHero = async () => {
   try {
     const response = await fetch("http://localhost:8000/predict", {
       method: "POST",
@@ -233,9 +248,5 @@ const addHero = async (hero) => {
   } catch (error) {
     console.error(error)
   }
-}
-
-const removeHero = (hero) => {
-  team.value = team.value.filter((h) => h.id !== hero.id)
 }
 </script>
