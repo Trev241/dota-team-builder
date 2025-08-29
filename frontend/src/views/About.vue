@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-6xl mx-auto mt-12">
     <h1 class="text-4xl mb-2 font-bold">Another Dota Synergy Predictor</h1>
-    <p class="text-xl mb-6">To be used for fun</p>
+    <p class="text-xl mb-6">A fun little tool to understand synergies with neural networks</p>
 
     <p class="mb-4">
       If you're here, then I assume you must already know what Dota 2 is. For the uninformed, it's a
@@ -17,7 +17,7 @@
       forming the perfect synergy.
     </p>
 
-    <h2 class="text-2xl font-bold mb-2">How does it work?</h2>
+    <h2 class="text-2xl font-bold mt-6 mb-2">How does it work?</h2>
     <p class="mb-4">
       The neural network used here was trained on
       <a
@@ -45,8 +45,8 @@
       embedding space.
     </p>
 
-    <h2 class="text-2xl font-bold mb-2">Some heroes are missing</h2>
-    <p>
+    <h2 class="text-2xl font-bold mt-6 mb-2">Where is Marci? Where is...?</h2>
+    <p class="mb-4">
       The
       <a
         target="_blank"
@@ -56,6 +56,21 @@
       >
       used is from 2016. That's the reason why some heroes are missing. This was not created to be
       taken seriously which is why no effort has been made towards ensuring its modern relevance.
+    </p>
+
+    <h2 class="text-2xl font-bold mt-6 mb-2">Why can't I choose heroes for the enemy team?</h2>
+    <p class="mb-4">
+      I suppose the biggest flaw with this model right now is that it does not factor in the
+      composition of the opponent's team. The network was trained to understand and predict the
+      synergies between heroes on the same team. A large part of the game also involves how heroes
+      play <i>against</i> each other.
+    </p>
+
+    <p class="mb-4">
+      It's a shame that I never got around implementing this. Including counters and enemy picks
+      increases the complexity of the model which means that it would require a significantly longer
+      time to train. It's not impossible but considering that I had to rotate between three Google
+      accounts to train the current model on Google Colab, I'd leave it for another day.
     </p>
   </div>
 </template>

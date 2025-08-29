@@ -10,7 +10,7 @@
         <router-link to="/embeddings" class="hover:text-blue-300">Synergies</router-link>
       </div>
     </nav>
-    <main>
+    <main class="p-6">
       <router-view />
     </main>
   </div>

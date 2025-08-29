@@ -14,23 +14,49 @@
         theory.
       </p>
 
-      <h2 class="text-2xl font-semibold text-center mb-4">3D Embeddings</h2>
+      <h2 class="text-2xl mt-12 font-semibold text-center">3D Embeddings</h2>
+      <p class="mb-4 text-center">An interactive plot visualizing hero embeddings in 3D space</p>
       <div class="flex flex-row justify-center mb-4">
         <div v-for="role in roles" :key="role.id" class="flex items-center mr-6">
           <span :style="`background:${role.color}`" class="w-4 h-4 rounded-full mr-2 border"></span>
           <span class="font-medium text-gray-700">{{ role.name }}</span>
         </div>
       </div>
-      <div ref="plot3dContainer" class="w-full mx-auto"></div>
+      <div ref="plot3dContainer" class="w-full h-[600px] mx-auto"></div>
 
-      <h2 class="text-2xl font-semibold text-center mt-6 mb-4">2D Embeddings</h2>
+      <h2 class="text-2xl font-semibold text-center mt-6">2D Embeddings</h2>
+      <p class="mb-4 text-center">To see a hero's name, hover over the marker</p>
       <div class="flex flex-row justify-center mb-4">
         <div v-for="role in roles" :key="role.id" class="flex items-center mr-6">
           <span :style="`background:${role.color}`" class="w-4 h-4 rounded-full mr-2 border"></span>
           <span class="font-medium text-gray-700">{{ role.name }}</span>
         </div>
       </div>
-      <div ref="plot2dContainer" class="w-full mx-auto"></div>
+      <div ref="plot2dContainer" class="w-full h-[600px] mb-4 mx-auto"></div>
+      <p class="mb-4">
+        Observe how roles do not form clusters. This makes intuitive sense actually. If heroes
+        closer together in an embedding space are synergestic, then it's obvious that we wouldn't
+        expect to see, for example, three hard supports placed close together. They would instead be
+        better of complementing heroes belonging to other roles which is what we see in this
+        embedding chart.
+      </p>
+
+      <h2 class="text-4xl font-bold mt-6 mb-4">Synergy Graph</h2>
+      <p class="mb-4">
+        The charts above do not explicitly produce good synergy pairs. So instead of just plotting
+        the embeddings in a chart, we can produce a synergy matrix produced by taking the cosine
+        similarities of different hero pairs. Using this synergy matrix, we can then construct a
+        network graph.
+      </p>
+
+      <p class="mb-4">
+        Each node represnts a hero. For every pair of heroes, an edge is created if and only if the
+        synergy between the two heroes is above a certain threshold. This makes it so that we only
+        highlight noteworthy synergies while ignoring those that could be possibly negligible or
+        even anti-synergestic.
+      </p>
+
+      <iframe src="/hero_synergy_graph.html" class="w-full h-[600px] border-0"></iframe>
     </div>
   </div>
 </template>

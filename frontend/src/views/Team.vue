@@ -11,7 +11,6 @@
     <h1 class="text-4xl font-bold mb-2">Assemble a team</h1>
     <p class="text-xl mb-6">Select a few heroes to get started.</p>
 
-    <h2 class="text-xl text-center font-semibold mb-4">Your Team</h2>
     <div class="flex flex-wrap max-w-4xl mx-auto mb-8">
       <div
         v-for="index in maxTeamSize"
@@ -32,15 +31,16 @@
           </div>
         </template>
         <template v-else>
-          <div class="flex items-center h-40">
-            <p class="text-lg italic">Empty Slot</p>
+          <div class="flex items-center h-40 w-full">
+            <p class="w-full text-center text-lg italic">Empty Slot</p>
           </div>
         </template>
       </div>
     </div>
 
     <h2 class="text-xl font-semibold">Available Heroes</h2>
-    <p v-if="!isSmallScreen" class="mb-4">Type in anywhere to search for a hero</p>
+    <p class="">Heroes will be automatically sorted from highest to lowest synergy.</p>
+    <p v-if="!isSmallScreen" class="mb-4">Type in anywhere to search for a hero.</p>
     <input
       v-if="isSmallScreen"
       v-model="searchQuery"
@@ -228,7 +228,8 @@ const addHero = async (hero) => {
 
 const removeHero = async (hero) => {
   team.value = team.value.filter((h) => h.id !== hero.id)
-  await predictHero()
+
+  if (team.value.length >= 1) await predictHero()
 }
 
 const predictHero = async () => {
