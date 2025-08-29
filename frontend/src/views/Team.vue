@@ -53,12 +53,14 @@
         v-for="hero in filteredAndSortedHeroes"
         :key="hero.id"
         :class="[
-          'w-1/3 md:w-30 hero-icon rounded-lg hover:bg-green-200 p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+          'w-1/3 md:w-30 hero-icon rounded-lg p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
           team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
           !hero.filtered && 'opacity-10',
           hero.selected && 'opacity-10',
         ]"
         @click="addHero(hero)"
+        @mouseenter="playHoverAnim($event, true)"
+        @mouseleave="playHoverAnim($event, false)"
         :aria-disabled="team.length >= 5"
         :title="team.length >= 5 ? 'Team is full' : hero.localized_name"
       >
@@ -126,6 +128,15 @@ const onGlobalKeyDown = async (event) => {
 const onResize = () => {
   isSmallScreen.value = window.innerWidth < 768
   if (isSmallScreen.value) typedText.value = ""
+}
+
+const playHoverAnim = (event, hover) => {
+  const element = event.currentTarget
+  if (hover) {
+    gsap.to(element, { scale: 1.1, boxShadow: "0 10px 20px rgba(0,0,0,0.3)", duration: 0.3 })
+  } else {
+    gsap.to(element, { scale: 1, boxShadow: "0 0px 0px rgba(0,0,0,0)", duration: 0.3 })
+  }
 }
 
 onMounted(async () => {
