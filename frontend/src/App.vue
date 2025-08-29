@@ -5,7 +5,7 @@
       class="flex text-white justify-between bg-gray-950 border-b border-gray-800 p-4"
     >
       <div>
-        <h1 class="text-2xl font-semibold">DOTA 2 Team Builder</h1>
+        <h1 class="text-2xl font-semibold cursor-default">DOTA Team Builder</h1>
       </div>
       <div class="flex items-center">
         <router-link to="/about" class="mr-6 hover:text-blue-300">About</router-link>

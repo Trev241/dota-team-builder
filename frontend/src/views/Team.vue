@@ -8,53 +8,67 @@
       {{ typedText }}
     </div>
 
-    <div class="text-center">
-      <h1 class="text-4xl font-bold mb-2">
-        <span v-if="team.length < 5"> Your turn to pick </span>
-        <span v-else>Prepare for battle</span>
-      </h1>
-      <p class="text-xl mb-6">
-        <span v-if="team.length < 5">Choose heroes to build your team</span>
-        <span v-else>Your team is ready</span>
-      </p>
+    <div v-if="!isBackendUp" class="flex justify-center items-center">
+      <div class="flex items-center border-2 border-cyan-400 rounded-lg p-4 mb-4">
+        <Spinner class="mr-4" />
+        <div>Connecting to server. Picks will not be optimized until then.</div>
+      </div>
     </div>
 
-    <div class="flex flex-wrap justify-center max-w-6xl gap-2 mx-auto mb-8">
-      <div
-        v-for="index in maxTeamSize"
-        :key="index"
-        @click="removeHero($event, team[index - 1])"
-        class="w-1/2 md:w-1/6 rounded-lg flex flex-col items-center justify-center"
-      >
-        <template v-if="team[index - 1]">
-          <div
-            :class="[
-              'w-full hover:bg-rose-600 p-1 rounded-lg',
-              index === team.length && 'team-chosen-icon',
-            ]"
-          >
-            <img
-              :src="team[index - 1].icon_url"
-              :alt="team[index - 1].localized_name"
-              class="w-full rounded-md object-contain"
-            />
-            <div class="mt-1 font-semibold text-center">
-              {{ team[index - 1].localized_name }}
+    <div class="flex flex-col justify-center items-center min-h-[50vh]">
+      <div class="w-full text-center">
+        <h1 class="text-5xl tracking-wider font-semibold mb-2">
+          <span v-if="team.length < 5">YOUR TURN TO PICK</span>
+          <span v-else>PREPARE FOR BATTLE</span>
+        </h1>
+        <p class="text-2xl mb-6">
+          <span v-if="team.length < 5">- Choose heroes to build your team -</span>
+          <span v-else>- Your team is ready -</span>
+        </p>
+      </div>
+
+      <div class="w-full flex flex-wrap justify-center max-w-6xl gap-2 mx-auto mb-8 bg-slate-900 rounded-lg p-2 cursor-default">
+        <div
+          v-for="index in maxTeamSize"
+          :key="index"
+          @click="removeHero($event, team[index - 1])"
+          class="w-1/2 md:w-1/6 rounded-lg flex flex-col items-center justify-center"
+        >
+          <template v-if="team[index - 1]">
+            <div
+              :class="[
+                'w-full hover:bg-rose-600 bg-amber-50 text-black p-1 rounded-lg',
+                index === team.length && 'team-chosen-icon',
+              ]"
+            >
+              <img
+                :src="team[index - 1].icon_url"
+                :alt="team[index - 1].localized_name"
+                class="w-full rounded-md object-contain"
+              />
+              <div class="mt-1 text-sm font-semibold uppercase text-center truncate">
+                {{ team[index - 1].localized_name }}
+              </div>
             </div>
-          </div>
-        </template>
-        <template v-else>
-          <div class="flex items-center h-40 w-full bg-gray-800">
-            <p class="w-full text-center text-lg italic">Empty Slot</p>
-          </div>
-        </template>
+          </template>
+          <template v-else>
+            <div class="flex items-center h-40 w-full rounded-lg bg-gray-800">
+              <p class="w-full text-center text-lg italic">Empty Slot</p>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
 
     <div>
-      <h2 class="text-2xl font-semibold">Available Heroes</h2>
+      <h2 class="text-3xl tracking-wider font-semibold mb-2">HERO POOL</h2>
 
-      <p v-if="!isSmallScreen" class="mb-6">Type in anywhere to search for a hero.</p>
+      <p v-if="!isSmallScreen" class="text-gray-400 mb-6">
+        Search for a hero by typing in its name anywhere on the screen.
+        <p v-if="isBackendUp"
+          >Heroes are automatically sorted from highest to lowest synergy in the team.</p
+        >
+      </p>
       <input
         v-else
         v-model="searchQuery"
@@ -63,20 +77,16 @@
         class="w-full p-3 mt-2 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
-      <div v-if="!isBackendUp" class="flex items-center font-semibold mb-4">
-        <Spinner class="mr-2" />
-        <div>Connecting to server. Picks will not be optimized until then.</div>
-      </div>
-      <p v-else class="font-semibold">
+      <!-- <p v-else class="text-center mb-4">
         Heroes will be automatically sorted from highest to lowest synergy.
-      </p>
+      </p> -->
 
       <div ref="listContainer" class="flex flex-wrap gap-2">
         <div
           v-for="hero in filteredAndSortedHeroes"
           :key="hero.id"
           :class="[
-            'w-1/3 md:w-30 hero-icon shadow-xl/20 rounded-lg flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+            'w-1/3 md:w-30 hero-icon rounded-lg flex flex-col items-center cursor-pointer transition-shadow',
             team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
             !hero.filtered && 'opacity-10',
             hero.selected && 'opacity-10',
@@ -239,7 +249,7 @@ async function animateSort(newOrder) {
   await nextTick()
 
   Flip.from(state, {
-    duration: 1,
+    duration: 1.25,
     ease: "power3.out",
   })
 }
@@ -277,10 +287,10 @@ const addHero = async (hero) => {
 
   team.value.push(hero)
   await nextTick()
-  gsap.fromTo(
+  await gsap.fromTo(
     ".team-chosen-icon",
-    { scale: 2.5, position: "relative", zIndex: 10 },
-    { scale: 1, duration: 0.5, ease: "power4.in", zIndex: "" },
+    { scale: 3, position: "relative", zIndex: 10 },
+    { scale: 1, duration: 0.5, ease: "power4.in", position: "block", zIndex: 0 },
   )
 
   // Do not call predict if the team is full or if backend is not up
@@ -293,6 +303,8 @@ const addHero = async (hero) => {
 }
 
 const removeHero = async (event, hero) => {
+  if (!hero) return
+
   const target = event.currentTarget
   target.classList.add("team-removed-icon")
 
@@ -303,7 +315,7 @@ const removeHero = async (event, hero) => {
     duration: 0.5,
   })
 
-  gsap.set(target, { yPercent: 0, opacity: 1 })
+  gsap.set(target, { yPercent: 0, opacity: 1, position: "relative", zIndex: 0 })
   target.classList.remove("team-removed-icon")
 
   team.value = team.value.filter((h) => h.id !== hero.id)

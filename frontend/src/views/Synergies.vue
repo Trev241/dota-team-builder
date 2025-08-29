@@ -3,13 +3,13 @@
     <div class="max-w-6xl mx-auto">
       <h1 class="text-4xl font-bold mb-4">Hero Embeddings</h1>
 
-      <p class="mb-4">
+      <p class="text-gray-400 mb-4">
         Here is a visual representation of the hero embeddings that were generated during training.
         The embeddings you see below have been reduced from 128 dimensions to 3 dimensions using PCA
         and t-SNE.
       </p>
 
-      <p class="mb-4">
+      <p class="text-gray-400 mb-4">
         Heroes located closer together in the embedding space are said to have good synergy in
         theory.
       </p>
@@ -54,7 +54,7 @@
           ></div>
           <div ref="plot2dContainer" class="w-full h-full"></div>
         </div>
-        <p class="mb-4">
+        <p class="text-gray-400 mb-4">
           Observe how roles do not form clusters. This makes intuitive sense actually. If heroes
           closer together in an embedding space are synergestic, then it's obvious that we wouldn't
           expect to see, for example, three hard supports placed close together. They would instead
@@ -65,14 +65,14 @@
 
       <div>
         <h2 class="text-4xl font-bold mt-12 mb-4">Synergy Graph</h2>
-        <p class="mb-4">
+        <p class="text-gray-400 mb-4">
           The charts above do not explicitly produce good synergy pairs. So instead of just plotting
           the embeddings in a chart, we can produce a synergy matrix produced by taking the cosine
           similarities of different hero pairs. Using this synergy matrix, we can then construct a
           network graph.
         </p>
 
-        <p class="mb-4">
+        <p class="text-gray-400 mb-4">
           Each node represnts a hero. For every pair of heroes, an edge is created if and only if
           the synergy between the two heroes is above a certain threshold. This makes it so that we
           only highlight noteworthy synergies while ignoring those that could be possibly negligible
