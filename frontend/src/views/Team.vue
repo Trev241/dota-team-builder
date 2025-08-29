@@ -38,41 +38,52 @@
       </div>
     </div>
 
-    <h2 class="text-xl font-semibold">Available Heroes</h2>
-    <p class="">Heroes will be automatically sorted from highest to lowest synergy.</p>
-    <p v-if="!isSmallScreen" class="mb-4">Type in anywhere to search for a hero.</p>
-    <input
-      v-if="isSmallScreen"
-      v-model="searchQuery"
-      placeholder="Search heroes"
-      type="text"
-      class="w-full p-3 mt-2 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-    <div ref="listContainer" class="flex flex-wrap">
-      <div
-        v-for="hero in filteredAndSortedHeroes"
-        :key="hero.id"
-        :class="[
-          'w-1/3 md:w-30 hero-icon rounded-lg p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
-          team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
-          !hero.filtered && 'opacity-10',
-          hero.selected && 'opacity-10',
-        ]"
-        @click="addHero(hero)"
-        @mouseenter="playHoverAnim($event, true)"
-        @mouseleave="playHoverAnim($event, false)"
-        :aria-disabled="team.length >= 5"
-        :title="team.length >= 5 ? 'Team is full' : hero.localized_name"
-      >
-        <img
-          :src="hero.icon_url"
-          :alt="hero.localized_name"
-          class="w-full rounded-md object-contain"
-        />
-        <!-- <div class="text-center font-semibold mt-1">{{ hero.localized_name }}</div> -->
+    <div>
+      <h2 class="text-2xl font-semibold">Available Heroes</h2>
+
+      <p v-if="!isSmallScreen" class="mb-6">Type in anywhere to search for a hero.</p>
+      <input
+        v-else
+        v-model="searchQuery"
+        placeholder="Search heroes"
+        type="text"
+        class="w-full p-3 mt-2 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+
+      <div v-if="!isBackendUp" class="flex items-center font-semibold mb-4">
+        <Spinner class="mr-2" />
+        <div>Connecting to server. Picks will not be optimized until then.</div>
       </div>
-      <div v-if="filteredAndSortedHeroes.length === 0" class="text-gray-500 mt-4">
-        No heroes match your search.
+      <p v-else class="font-semibold">
+        Heroes will be automatically sorted from highest to lowest synergy.
+      </p>
+
+      <div ref="listContainer" class="flex flex-wrap">
+        <div
+          v-for="hero in filteredAndSortedHeroes"
+          :key="hero.id"
+          :class="[
+            'w-1/3 md:w-30 hero-icon rounded-lg p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+            team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
+            !hero.filtered && 'opacity-10',
+            hero.selected && 'opacity-10',
+          ]"
+          @click="addHero(hero)"
+          @mouseenter="playHoverAnim($event, true)"
+          @mouseleave="playHoverAnim($event, false)"
+          :aria-disabled="team.length >= 5"
+          :title="team.length >= 5 ? 'Team is full' : hero.localized_name"
+        >
+          <img
+            :src="hero.icon_url"
+            :alt="hero.localized_name"
+            class="w-full rounded-md object-contain"
+          />
+          <!-- <div class="text-center font-semibold mt-1">{{ hero.localized_name }}</div> -->
+        </div>
+        <div v-if="filteredAndSortedHeroes.length === 0" class="text-gray-500 mt-4">
+          No heroes match your search.
+        </div>
       </div>
     </div>
   </div>
@@ -82,6 +93,9 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue"
 import gsap from "gsap"
 import Flip from "gsap/Flip"
+import Spinner from "../components/Spinner.vue"
+
+const API_URL = import.meta.env.VITE_API_URL
 
 gsap.registerPlugin(Flip)
 
@@ -89,10 +103,14 @@ const maxTeamSize = 5
 
 const searchQuery = ref("")
 const typedText = ref("")
-const debounceTimeout = ref(null)
-const isSmallScreen = ref(window.innerWidth < 768)
 const team = ref([])
 const heroes = ref([]) // initially empty, to be fetched
+
+const debounceTimeout = ref(null)
+const isSmallScreen = ref(window.innerWidth < 768)
+const isBackendUp = ref(false)
+const pingInterval = ref(null)
+
 const listContainer = ref(null)
 const animationDone = ref(false)
 
@@ -139,7 +157,24 @@ const playHoverAnim = (event, hover) => {
   }
 }
 
+const pingBackend = async () => {
+  try {
+    const response = await fetch(`${API_URL}/health`)
+    if (response.ok) {
+      isBackendUp.value = true
+      clearInterval(pingInterval.value)
+      console.log("Backend is up!")
+    } else {
+      console.log("Backend not ready yet...")
+    }
+  } catch (error) {
+    console.log("Backend not reachable:", error)
+  }
+}
+
 onMounted(async () => {
+  pingInterval.value = setInterval(pingBackend, 3000)
+
   window.addEventListener("keydown", onGlobalKeyDown)
   window.addEventListener("resize", onResize)
 
@@ -228,8 +263,8 @@ const addHero = async (hero) => {
     return
   team.value.push(hero)
 
-  // Do not call predict if the team is full
-  if (team.value.length === 5) {
+  // Do not call predict if the team is full or if backend is not up
+  if (team.value.length === 5 || !isBackendUp) {
     animateSort(heroes.value)
     return
   }
@@ -245,7 +280,7 @@ const removeHero = async (hero) => {
 
 const predictHero = async () => {
   try {
-    const response = await fetch("http://localhost:8000/predict", {
+    const response = await fetch(`${API_URL}/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ heroes: team.value.map((hero) => hero.id) }),

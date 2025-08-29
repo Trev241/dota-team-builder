@@ -124,41 +124,41 @@ model.load_state_dict(checkpoint["model_state_dict"])
 model.eval()
 model.to(device)
 
-hero_embeddings = model.embedding.weight.detach().cpu().numpy()
-pca = PCA(n_components=30)
-embeddings_pca = pca.fit_transform(hero_embeddings)
+# hero_embeddings = model.embedding.weight.detach().cpu().numpy()
+# pca = PCA(n_components=30)
+# embeddings_pca = pca.fit_transform(hero_embeddings)
 
-tsne = TSNE(n_components=3, perplexity=30, n_iter=1000, random_state=42)
-embeddings_tsne_3d = tsne.fit_transform(embeddings_pca)
+# tsne = TSNE(n_components=3, perplexity=30, n_iter=1000, random_state=42)
+# embeddings_tsne_3d = tsne.fit_transform(embeddings_pca)
 
-tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
-embeddings_tsne_2d = tsne.fit_transform(embeddings_pca)
+# tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+# embeddings_tsne_2d = tsne.fit_transform(embeddings_pca)
 
-hero_embeddings_3d = [
-    {**heroes_lookup[idx + 1], "embedding": embedding, "role": role_map[idx]}
-    for idx, embedding in enumerate(embeddings_tsne_3d.tolist())
-    if idx + 1 != 24
-]
-hero_embeddings_2d = [
-    {**heroes_lookup[idx + 1], "embedding": embedding, "role": role_map[idx]}
-    for idx, embedding in enumerate(embeddings_tsne_2d.tolist())
-    if idx + 1 != 24
-]
+# hero_embeddings_3d = [
+#     {**heroes_lookup[idx + 1], "embedding": embedding, "role": role_map[idx]}
+#     for idx, embedding in enumerate(embeddings_tsne_3d.tolist())
+#     if idx + 1 != 24
+# ]
+# hero_embeddings_2d = [
+#     {**heroes_lookup[idx + 1], "embedding": embedding, "role": role_map[idx]}
+#     for idx, embedding in enumerate(embeddings_tsne_2d.tolist())
+#     if idx + 1 != 24
+# ]
 
-with open("assets/embeddings_3d.json", "w") as fp:
-    json.dump(hero_embeddings_3d, fp, indent=2)
+# with open("assets/embeddings_3d.json", "w") as fp:
+#     json.dump(hero_embeddings_3d, fp, indent=2)
 
-with open("assets/embeddings_2d.json", "w") as fp:
-    json.dump(hero_embeddings_2d, fp, indent=2)
+# with open("assets/embeddings_2d.json", "w") as fp:
+#     json.dump(hero_embeddings_2d, fp, indent=2)
 
-synergy_matrix = cosine_similarity(hero_embeddings)
-scaler = MinMaxScaler()
-synergy_flat = synergy_matrix.reshape(-1, 1)
-synergy_scaled_flat = scaler.fit_transform(synergy_flat)
-synergy_scaled = synergy_scaled_flat.reshape(synergy_matrix.shape)
+# synergy_matrix = cosine_similarity(hero_embeddings)
+# scaler = MinMaxScaler()
+# synergy_flat = synergy_matrix.reshape(-1, 1)
+# synergy_scaled_flat = scaler.fit_transform(synergy_flat)
+# synergy_scaled = synergy_scaled_flat.reshape(synergy_matrix.shape)
 
-with open("assets/synergy_matrix.json", "w") as fp:
-    json.dump(synergy_scaled.tolist(), fp, indent=2)
+# with open("assets/synergy_matrix.json", "w") as fp:
+#     json.dump(synergy_scaled.tolist(), fp, indent=2)
 
 
 # Pydantic schema for input
@@ -192,6 +192,11 @@ def fill_heroes_with_similar(heroes_list, embedding_layer, num_total=4):
 
     filled_heroes = heroes_list + top_indices.tolist()
     return filled_heroes
+
+
+@app.get("/health")
+def health():
+    return {"message": "Service is up"}
 
 
 @app.post("/predict")
