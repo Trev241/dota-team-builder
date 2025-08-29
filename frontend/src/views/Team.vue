@@ -1,5 +1,5 @@
 <template>
-  <div class="relative min-h-screen mx-auto p-6 font-sans">
+  <div class="relative min-h-screen mx-auto p-6">
     <!-- Overlay text on large screens -->
     <div
       v-if="!isSmallScreen && typedText"
@@ -8,30 +8,43 @@
       {{ typedText }}
     </div>
 
-    <h1 class="text-4xl font-bold mb-2">Assemble a team</h1>
-    <p class="text-xl mb-6">Select a few heroes to get started.</p>
+    <div class="text-center">
+      <h1 class="text-4xl font-bold mb-2">
+        <span v-if="team.length < 5"> Your turn to pick </span>
+        <span v-else>Prepare for battle</span>
+      </h1>
+      <p class="text-xl mb-6">
+        <span v-if="team.length < 5">Choose heroes to build your team</span>
+        <span v-else>Your team is ready</span>
+      </p>
+    </div>
 
-    <div class="flex flex-wrap max-w-4xl mx-auto mb-8">
+    <div class="flex flex-wrap justify-center max-w-6xl gap-2 mx-auto mb-8">
       <div
         v-for="index in maxTeamSize"
         :key="index"
-        @click="removeHero(team[index - 1])"
-        class="w-1/2 md:w-1/5 rounded-lg flex flex-col items-center justify-center text-gray-400"
+        @click="removeHero($event, team[index - 1])"
+        class="w-1/2 md:w-1/6 rounded-lg flex flex-col items-center justify-center"
       >
         <template v-if="team[index - 1]">
-          <div class="w-full hover:bg-red-100 p-2 rounded-lg">
+          <div
+            :class="[
+              'w-full hover:bg-rose-600 p-1 rounded-lg',
+              index === team.length && 'team-chosen-icon',
+            ]"
+          >
             <img
               :src="team[index - 1].icon_url"
               :alt="team[index - 1].localized_name"
               class="w-full rounded-md object-contain"
             />
-            <div class="mt-1 font-semibold text-gray-900 text-center">
+            <div class="mt-1 font-semibold text-center">
               {{ team[index - 1].localized_name }}
             </div>
           </div>
         </template>
         <template v-else>
-          <div class="flex items-center h-40 w-full">
+          <div class="flex items-center h-40 w-full bg-gray-800">
             <p class="w-full text-center text-lg italic">Empty Slot</p>
           </div>
         </template>
@@ -58,12 +71,12 @@
         Heroes will be automatically sorted from highest to lowest synergy.
       </p>
 
-      <div ref="listContainer" class="flex flex-wrap">
+      <div ref="listContainer" class="flex flex-wrap gap-2">
         <div
           v-for="hero in filteredAndSortedHeroes"
           :key="hero.id"
           :class="[
-            'w-1/3 md:w-30 hero-icon rounded-lg p-1 flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
+            'w-1/3 md:w-30 hero-icon shadow-xl/20 rounded-lg flex flex-col items-center cursor-pointer hover:shadow-lg transition-shadow',
             team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
             !hero.filtered && 'opacity-10',
             hero.selected && 'opacity-10',
@@ -151,9 +164,9 @@ const onResize = () => {
 const playHoverAnim = (event, hover) => {
   const element = event.currentTarget
   if (hover) {
-    gsap.to(element, { scale: 1.1, boxShadow: "0 10px 20px rgba(0,0,0,0.3)", duration: 0.3 })
+    gsap.to(element, { scale: 1.1, duration: 0.3 })
   } else {
-    gsap.to(element, { scale: 1, boxShadow: "0 0px 0px rgba(0,0,0,0)", duration: 0.3 })
+    gsap.to(element, { scale: 1, duration: 0.3 })
   }
 }
 
@@ -261,7 +274,14 @@ const filteredAndSortedHeroes = computed(() => filterHeroIcons())
 const addHero = async (hero) => {
   if (team.value.length >= 5 || team.value.some((h) => h.id === hero.id) || !animationDone.value)
     return
+
   team.value.push(hero)
+  await nextTick()
+  gsap.fromTo(
+    ".team-chosen-icon",
+    { scale: 2.5, position: "relative", zIndex: 10 },
+    { scale: 1, duration: 0.5, ease: "power4.in", zIndex: "" },
+  )
 
   // Do not call predict if the team is full or if backend is not up
   if (team.value.length === 5 || !isBackendUp) {
@@ -272,7 +292,20 @@ const addHero = async (hero) => {
   await predictHero()
 }
 
-const removeHero = async (hero) => {
+const removeHero = async (event, hero) => {
+  const target = event.currentTarget
+  target.classList.add("team-removed-icon")
+
+  await gsap.to(target, {
+    yPercent: 100,
+    opacity: 0,
+    ease: "power4.out",
+    duration: 0.5,
+  })
+
+  gsap.set(target, { yPercent: 0, opacity: 1 })
+  target.classList.remove("team-removed-icon")
+
   team.value = team.value.filter((h) => h.id !== hero.id)
 
   if (team.value.length >= 1) await predictHero()

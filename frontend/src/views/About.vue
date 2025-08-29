@@ -22,7 +22,7 @@
       The neural network used here was trained on
       <a
         target="_blank"
-        class="text-blue-600 hover:text-blue-400"
+        class="text-blue-400 hover:text-blue-300 hover:underline"
         href="https://archive.ics.uci.edu/dataset/367/dota2+games+results"
         >this dataset</a
       >
@@ -50,7 +50,7 @@
       The
       <a
         target="_blank"
-        class="text-blue-600 hover:text-blue-400"
+        class="text-blue-400 hover:text-blue-300 hover:underline"
         href="https://archive.ics.uci.edu/dataset/367/dota2+games+results"
         >dataset</a
       >

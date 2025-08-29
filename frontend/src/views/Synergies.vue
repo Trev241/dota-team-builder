@@ -23,13 +23,13 @@
               :style="`background:${role.color}`"
               class="w-4 h-4 rounded-full mr-2 border"
             ></span>
-            <span class="font-medium text-gray-700">{{ role.name }}</span>
+            <span class="text-gray-300">{{ role.name }}</span>
           </div>
         </div>
         <div class="relative w-full h-[600px]">
           <div
             v-show="isLoading"
-            class="absolute inset-0 bg-gray-300 animate-pulse rounded z-10"
+            class="absolute inset-0 bg-gray-800 animate-pulse rounded z-10"
           ></div>
           <div ref="plot3dContainer" class="w-full h-full"></div>
         </div>
@@ -44,13 +44,13 @@
               :style="`background:${role.color}`"
               class="w-4 h-4 rounded-full mr-2 border"
             ></span>
-            <span class="font-medium text-gray-700">{{ role.name }}</span>
+            <span class="text-gray-300">{{ role.name }}</span>
           </div>
         </div>
         <div class="relative w-full h-[600px] mb-4">
           <div
             v-show="isLoading"
-            class="absolute inset-0 bg-gray-300 animate-pulse rounded z-10"
+            class="absolute inset-0 bg-gray-800 animate-pulse rounded z-10"
           ></div>
           <div ref="plot2dContainer" class="w-full h-full"></div>
         </div>
@@ -64,7 +64,7 @@
       </div>
 
       <div>
-        <h2 class="text-4xl font-bold mt-6 mb-4">Synergy Graph</h2>
+        <h2 class="text-4xl font-bold mt-12 mb-4">Synergy Graph</h2>
         <p class="mb-4">
           The charts above do not explicitly produce good synergy pairs. So instead of just plotting
           the embeddings in a chart, we can produce a synergy matrix produced by taking the cosine
