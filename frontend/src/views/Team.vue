@@ -203,6 +203,7 @@ const playHoverAnim = (event, hover) => {
 
 const pingBackend = async () => {
   try {
+    console.log(API_URL)
     const response = await fetch(`${API_URL}/health`)
     if (response.ok) {
       isBackendUp.value = true
