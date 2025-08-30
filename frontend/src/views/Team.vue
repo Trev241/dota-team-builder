@@ -218,7 +218,7 @@ const pingBackend = async () => {
 }
 
 onMounted(async () => {
-  pingInterval.value = setInterval(pingBackend, 3000)
+  pingInterval.value = setInterval(pingBackend, 10000)
 
   window.addEventListener("keydown", onGlobalKeyDown)
   window.addEventListener("resize", onResize)
