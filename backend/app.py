@@ -21,6 +21,7 @@ import os
 
 load_dotenv()
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+print(f"Allowed origin(s): {FRONTEND_URL}")
 
 app = FastAPI()
 

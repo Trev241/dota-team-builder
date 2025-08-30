@@ -4,3 +4,4 @@ numpy
 pydantic
 scikit_learn
 torch
+python-dotenv
