@@ -1,5 +1,6 @@
-fastapi==0.116.1
-numpy==2.3.2
-pydantic==2.11.7
-scikit_learn==1.7.1
-torch==2.6.0
+fastapi
+uvicorn[standard]
+numpy
+pydantic
+scikit_learn
+torch
