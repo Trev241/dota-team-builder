@@ -14,7 +14,7 @@
 
     <p class="text-gray-400 mb-4">
       The goal is to predict the optimal team composition. A team that ideally consists of heroes
-      forming the perfect synergy.
+      forming the perfect synergy. Can we brew an artificial neural network to do the trick?
     </p>
 
     <h2 class="text-2xl font-bold mt-6 mb-2">How does it work?</h2>
@@ -58,6 +58,12 @@
       taken seriously which is why no effort has been made towards ensuring its modern relevance.
     </p>
 
+    <p class="text-gray-400 mb-4">
+      For the same reason as above, the hero you're looking for might be there but have an older
+      name. If you're looking for <i>Wraith King</i>, then you'll have to look up
+      <i>Skeleton King</i> instead. That's just one example.
+    </p>
+
     <h2 class="text-2xl font-bold mt-6 mb-2">Why can't I choose heroes for the enemy team?</h2>
     <p class="text-gray-400 mb-4">
       I suppose the biggest flaw with this model right now is that it does not factor in the
@@ -72,5 +78,15 @@
       time to train. It's not impossible but considering that I had to rotate between three Google
       accounts to train the current model on Google Colab, I'd leave it for another day.
     </p>
+
+    <div class="my-8">
+      <p class="font-semibold">Attribution</p>
+      <a
+        href="https://www.flaticon.com/free-icons/sword"
+        class="text-gray-300 hover:text-white hover:underline"
+        title="sword icons"
+        >Sword icons created by smashingstocks - Flaticon</a
+      >
+    </div>
   </div>
 </template>

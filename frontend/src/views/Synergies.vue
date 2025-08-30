@@ -166,7 +166,7 @@ const createEmbeddingsPlot3d = async () => {
     font: { family: "Inter, Arial, sans-serif", size: 12, color: "#4a5568" },
   }
 
-  await Plotly.newPlot(plot3dContainer.value, [trace], layout)
+  Plotly.newPlot(plot3dContainer.value, [trace], layout)
 }
 
 const createEmbeddingsPlot2d = async () => {
@@ -215,13 +215,12 @@ const createEmbeddingsPlot2d = async () => {
     font: { family: "Arial, sans-serif", size: 12, color: "#333" },
   }
 
-  await Plotly.newPlot(plot2dContainer.value, [trace], layout, { responsive: true })
+  Plotly.newPlot(plot2dContainer.value, [trace], layout, { responsive: true })
 }
 
 onMounted(async () => {
-  await createEmbeddingsPlot3d()
-  await createEmbeddingsPlot2d()
-
-  isLoading.value = false
+  Promise.all([createEmbeddingsPlot3d(), createEmbeddingsPlot2d()]).then(
+    () => (isLoading.value = false),
+  )
 })
 </script>

@@ -17,7 +17,7 @@
 
     <div class="flex flex-col justify-center items-center min-h-[50vh]">
       <div class="w-full text-center">
-        <h1 class="text-5xl tracking-wider font-semibold mb-2">
+        <h1 class="text-5xl tracking-widest font-semibold mb-2">
           <span v-if="team.length < 5">YOUR TURN TO PICK</span>
           <span v-else>PREPARE FOR BATTLE</span>
         </h1>
@@ -27,32 +27,34 @@
         </p>
       </div>
 
-      <div class="w-full flex flex-wrap justify-center max-w-6xl gap-2 mx-auto mb-8 bg-slate-900 rounded-lg p-2 cursor-default">
+      <div
+        class="w-full flex flex-wrap justify-center max-w-6xl gap-2 mx-auto mb-8 bg-slate-900 rounded-full p-2 cursor-default"
+      >
         <div
           v-for="index in maxTeamSize"
           :key="index"
           @click="removeHero($event, team[index - 1])"
-          class="w-1/2 md:w-1/6 rounded-lg flex flex-col items-center justify-center"
+          class="w-1/3 md:w-1/6 rounded-lg flex flex-col items-center justify-center"
         >
           <template v-if="team[index - 1]">
             <div
               :class="[
-                'w-full hover:bg-rose-600 bg-amber-50 text-black p-1 rounded-lg',
+                'w-full hover:bg-rose-600 hover:text-white bg-amber-50 text-black rounded-lg cursor-pointer',
                 index === team.length && 'team-chosen-icon',
               ]"
             >
               <img
                 :src="team[index - 1].icon_url"
                 :alt="team[index - 1].localized_name"
-                class="w-full rounded-md object-contain"
+                class="w-full rounded-t-md object-contain"
               />
-              <div class="mt-1 text-sm font-semibold uppercase text-center truncate">
+              <div class="my-1 text-sm font-semibold uppercase text-center truncate">
                 {{ team[index - 1].localized_name }}
               </div>
             </div>
           </template>
           <template v-else>
-            <div class="flex items-center h-40 w-full rounded-lg bg-gray-800">
+            <div class="w-full flex items-center h-20 md:h-34 w-full rounded-lg bg-gray-800">
               <p class="w-full text-center text-lg italic">Empty Slot</p>
             </div>
           </template>
@@ -63,11 +65,12 @@
     <div>
       <h2 class="text-3xl tracking-wider font-semibold mb-2">HERO POOL</h2>
 
+      <p v-if="isBackendUp" class="text-gray-400">
+        Heroes are automatically sorted from highest to lowest synergy in the team.
+      </p>
+
       <p v-if="!isSmallScreen" class="text-gray-400 mb-6">
         Search for a hero by typing in its name anywhere on the screen.
-        <p v-if="isBackendUp"
-          >Heroes are automatically sorted from highest to lowest synergy in the team.</p
-        >
       </p>
       <input
         v-else
@@ -81,12 +84,12 @@
         Heroes will be automatically sorted from highest to lowest synergy.
       </p> -->
 
-      <div ref="listContainer" class="flex flex-wrap gap-2">
+      <div ref="listContainer" class="flex flex-wrap gap-2 mb-6">
         <div
           v-for="hero in filteredAndSortedHeroes"
           :key="hero.id"
           :class="[
-            'w-1/3 md:w-30 hero-icon rounded-lg flex flex-col items-center cursor-pointer transition-shadow',
+            'w-1/3 md:w-30 hero-icon rounded-lg flex flex-col items-center cursor-pointer transition-shadow relative',
             team.length >= 5 ? 'opacity-50 pointer-events-none' : 'bg-white',
             !hero.filtered && 'opacity-10',
             hero.selected && 'opacity-10',
@@ -97,6 +100,16 @@
           :aria-disabled="team.length >= 5"
           :title="team.length >= 5 ? 'Team is full' : hero.localized_name"
         >
+          <div
+            v-if="hero.score"
+            :class="[
+              'absolute inset-0 flex justify-end items-end opacity-0 hover:opacity-100 font-bold',
+            ]"
+          >
+            <div class="bg-black p-1 rounded-tl-lg">
+              {{ Math.round(hero.score * 100) / 100 }}
+            </div>
+          </div>
           <img
             :src="hero.icon_url"
             :alt="hero.localized_name"
@@ -104,10 +117,18 @@
           />
           <!-- <div class="text-center font-semibold mt-1">{{ hero.localized_name }}</div> -->
         </div>
+
         <div v-if="filteredAndSortedHeroes.length === 0" class="text-gray-500 mt-4">
           No heroes match your search.
         </div>
       </div>
+
+      <p class="text-gray-400 text-center cursor-pointer">
+        I can't find a hero,
+        <a @click="$router.push('/about')" class="text-white hover:text-gray-300 hover:underline"
+          >it's missing</a
+        >.
+      </p>
     </div>
   </div>
 </template>
@@ -117,6 +138,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue"
 import gsap from "gsap"
 import Flip from "gsap/Flip"
 import Spinner from "../components/Spinner.vue"
+import { routerKey } from "vue-router"
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -174,9 +196,9 @@ const onResize = () => {
 const playHoverAnim = (event, hover) => {
   const element = event.currentTarget
   if (hover) {
-    gsap.to(element, { scale: 1.1, duration: 0.3 })
+    gsap.to(element, { scale: 1.1, duration: 0.2 })
   } else {
-    gsap.to(element, { scale: 1, duration: 0.3 })
+    gsap.to(element, { scale: 1, duration: 0.2 })
   }
 }
 
@@ -287,10 +309,11 @@ const addHero = async (hero) => {
 
   team.value.push(hero)
   await nextTick()
+  await gsap.set(".team-chosen-icon", { position: "relative", zIndex: 50 })
   await gsap.fromTo(
     ".team-chosen-icon",
-    { scale: 3, position: "relative", zIndex: 10 },
-    { scale: 1, duration: 0.5, ease: "power4.in", position: "block", zIndex: 0 },
+    { scale: 3 },
+    { scale: 1, duration: 0.5, ease: "power4.in" },
   )
 
   // Do not call predict if the team is full or if backend is not up
