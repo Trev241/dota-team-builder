@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
 from typing import List
+from dotenv import load_dotenv
+
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
+
 from roles import role_map
 
 import torch
@@ -13,11 +17,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import json
+import os
+
+load_dotenv()
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173",
+    FRONTEND_URL,
 ]
 
 app.add_middleware(

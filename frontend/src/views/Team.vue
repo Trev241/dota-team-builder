@@ -138,7 +138,6 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue"
 import gsap from "gsap"
 import Flip from "gsap/Flip"
 import Spinner from "../components/Spinner.vue"
-import { routerKey } from "vue-router"
 
 const API_URL = import.meta.env.VITE_API_URL
 
