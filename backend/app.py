@@ -25,13 +25,9 @@ print(f"Allowed origin(s): {FRONTEND_URL}")
 
 app = FastAPI()
 
-origins = [
-    FRONTEND_URL,
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
