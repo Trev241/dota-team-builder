@@ -11,7 +11,14 @@
     <div v-if="!isBackendUp" class="flex justify-center items-center">
       <div class="flex items-center border-2 border-cyan-400 rounded-lg p-4 mb-4">
         <Spinner class="mr-4" />
-        <div>Connecting to server. Picks will not be optimized until then.</div>
+        <div>
+          Connecting to server. Picks will not be optimized until then.
+          <span
+            class="hover:underline hover:text-blue-200 cursor-pointer text-blue-400"
+            @click="$router.push('/about#serverFaq')"
+            >Learn more</span
+          >.
+        </div>
       </div>
     </div>
 

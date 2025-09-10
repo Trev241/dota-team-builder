@@ -79,6 +79,16 @@
       accounts to train the current model on Google Colab, I'd leave it for another day.
     </p>
 
+    <h2 id="serverFaq" class="text-2xl font-bold mt-6 mb-2">
+      Why do I have to wait to connect to a server?
+    </h2>
+    <p class="text-gray-400 mb-4">
+      Team synergy predictions are made on a separate service that unfortunately does not enjoy the
+      privilege of 24/7 uptime. When a request is made after a long period of inactivity, the
+      service experiences a cold start which is why you have to wait for a litle while until the
+      team builder works at its full potential.
+    </p>
+
     <div class="my-8">
       <p class="font-semibold">Attribution</p>
       <a
